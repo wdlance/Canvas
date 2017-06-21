@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style type="text/css">
+    * {
+        margin: 0px;
+        padding: 0px;
+    }
+    
+    body {
+        overflow: hidden;
+    }
+    
+    #canvas {
+        background: #000;
+    }
+    </style>
+</head>
+
+<body>
+    <canvas id="canvas"></canvas>
+   <script src="https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js">
+</script>
+    <script type="text/javascript">
+    var ctx = document.getElementById('canvas').getContext('2d');
+    $(window).resize(function() {
+        resizeCanvas();
+    });
+    var width = $(window).get(0).innerWidth;
+    var height = $(window).get(0).innerHeight;
+    var points = []; //存储坐标
+    function resizeCanvas() {
+        $("#canvas").attr("width", width);
+        $("#canvas").attr("height", height);
+    }
+    resizeCanvas();
+    class Maze {
+        init(cols, cells) {
+            this.cells = [];
+            this.visitRoom = [{
+                x: 0,
+                y: 0
+            }];
+            this.createCells()
+            this.cells[0][0].top = false;
+            this.cells[0][0].bottom = false;
+            this.cells[0][0].isVisit = true;
+            this.cells[9][9].bottom = false;
+            this.findNeighbors(0, 0)
+            this.drawCells();
+        }
+        createCells() {
+            for (var i = 0; i < 10; i++) {
+                this.cells[i] = []
+                for (var j = 0; j < 10; j++) {
+                    this.cells[i].push({
+                        x: i,
+                        j: j,
+                        left: true,
+                        right: true,
+                        top: true,
+                        bottom: true,
+                        isVisit: false
+                    })
+                }
+            }
+        }
+        findNeighbors(x, y) {
+            var neighbors = [];
+            if (x - 1 > 0 && !this.cells[x - 1][y].isVisit) {
+                neighbors.push({
+                    x: x - 1,
+                    y: y
+                })
+            }
+            if (x + 1 < 10 && !this.cells[x + 1][y].isVisit) {
+                neighbors.push({
+                    x: x + 1,
+                    y: y
+                })
+            }
+            if (y - 1 > 0 && !this.cells[x][y - 1].isVisit) {
+                neighbors.push({
+                    x: x,
+                    y: y - 1
+                })
+            }
+            if (y + 1 < 10 && !this.cells[x][y + 1].isVisit) {
+                neighbors.push({
+                    x: x,
+                    y: y + 1
+                })
+            }
+            if (neighbors.length > 0) {
+                var current = {
+                    x: x,
+                    y: y
+                }
+                var next = neighbors[Math.floor(Math.random() * neighbors.length)];
+                this.cells[next.x][next.y].isVisit = true;
+                this.visitRoom.push(next)
+                this.removeLine(current, next)
+                this.findNeighbors(next.x, next.y)
+            } else { //当前单元格所有邻居都被访问过了
+                var next = this.visitRoom.pop();
+                if (next) {
+                    this.findNeighbors(next.x, next.y)
+                }
+
+            }
+        }
+        removeLine(current, next) {
+            var x1 = current.x;
+            var y1 = current.y;
+            var x2 = next.x;
+            var y2 = next.y;
+            if (y2 > y1) {
+                this.cells[x1][y1].right = false;
+                this.cells[x2][y2].left = false;
+            }
+            if (y2 < y1) {
+                this.cells[x1][y1].left = false;
+                this.cells[x2][y2].right = false;
+            }
+            if (x2 > x1) {
+                this.cells[x1][y1].bottom = false;
+                this.cells[x2][y2].top = false;
+            }
+            if (x2 < x1) {
+                this.cells[x1][y1].top = false;
+                this.cells[x2][y2].bottom = false;
+            }
+        }
+        drawCells() {
+
+            var x = 0,
+                y = 0,
+                w = (width - 30) / 10;
+
+            for (var i = 0; i < 10; i++) {
+                for (var j = 0; j < 10; j++) {
+                    ctx.beginPath();
+                    ctx.strokeStyle = "#fff";
+                    if (this.cells[i][j].left == true) {
+                        ctx.moveTo(j * w + 15, i * w + 15);
+                        ctx.lineTo(j * w + 15, (i + 1) * w + 15);
+                        ctx.stroke();
+                    }
+                    if (this.cells[i][j].right == true) {
+                        ctx.moveTo((j + 1) * w + 15, i * w + 15);
+                        ctx.lineTo((j + 1) * w + 15, (i + 1) * w + 15);
+                        ctx.stroke();
+                    }
+                    if (this.cells[i][j].up == true) {
+                        ctx.moveTo(j * w + 15, i * w + 15);
+                        ctx.lineTo((j + 1) * w + 15, i * w + 15);
+                        ctx.stroke();
+                    }
+                    if (this.cells[i][j].bottom == true) {
+                        ctx.moveTo(j * w + 15, (i + 1) * w + 15);
+                        ctx.lineTo((j + 1) * w + 15, (i + 1) * w + 15);
+                        ctx.stroke();
+                    }
+                    ctx.beginPath();
+                    var radial = ctx.createRadialGradient(x + 15 + w / 2 + j * w, y + 15 + w / 2 + i * w, 0, x + 15 + w / 2 + j * w, y + 15 + w / 2 + i * w, 5);
+                    radial.addColorStop(0, '#60bc4d');
+                    radial.addColorStop(1, '#409337');
+                    ctx.lineWidth = '1'
+                    ctx.fillStyle = radial;
+                    ctx.arc(x + 15 + w / 2 + j * w, y + 15 + w / 2 + i * w, 5, 0, 2 * Math.PI, false);
+                    ctx.fill()
+                }
+            }
+        }
+    }
+
+
+    var maze = new Maze();
+    maze.init();
+    class Eater {
+        init(location, r, step) {
+            this.location = location
+            this.step = step;
+            this.r = r;
+        }
+        draw() {
+            ctx.beginPath();
+            ctx.strokeStyle = "#666";
+            ctx.fillStyle = '#60bc4d'
+            ctx.arc(this.location.x, this.location.y, this.r, 30 * Math.PI / 180, 330 * Math.PI / 180, false)
+
+            ctx.moveTo(this.location.x + this.r * Math.cos(30 * Math.PI / 180), this.location.y - 12.5)
+            ctx.lineTo(this.location.x, this.location.y)
+            ctx.lineTo(this.location.x + this.r * Math.cos(30 * Math.PI / 180), this.location.y + 12.5)
+            ctx.fill();
+            //ctx.stroke()
+        }
+        move(direction) {
+            switch (direction) {
+                case 'left':
+
+                    this.changeLocation('left')
+                    break;
+                case 'right':
+
+                    this.changeLocation('right')
+                    break;
+                case 'up':
+
+                    this.changeLocation('up')
+                    break;
+                case 'down':
+
+                    this.changeLocation('down')
+                    break;
+            }
+        }
+        changeLocation(direction) {
+            this.clear();
+            switch (direction) {
+                case 'left':
+                    this.location.x -= (width - 30) / 10
+                    this.draw();
+                    break;
+                case 'right':
+                    this.location.x += (width - 30) / 10
+                    this.draw();
+                    break;
+                case 'up':
+                    this.location.y -= (width - 30) / 10
+                    this.draw();
+                    break;
+                case 'down':
+                    this.location.y += (width - 30) / 10
+                    this.draw();
+                    break;
+            }
+
+        }
+        clear() {
+            ctx.clearRect(this.location.x - this.r, this.location.y - this.r, 2 * this.r+3, 2 * this.r+3)
+        }
+    }
+    var eater = new Eater();
+    eater.init({
+        x: (width - 30) / 20 + 15,
+        y: (width - 30) / 20 + 15
+    }, (width - 30) / 20 - 5, 1)
+    eater.draw();
+    var r_step=0;//记录当前行坐标
+    var c_step=0;//记录当前列坐标
+    window.onkeydown = function(e) {
+        switch (e.keyCode) {
+            case 37:
+                if(!maze.cells[r_step][c_step].left){
+                	eater.move('left')
+                	      --c_step
+                }
+          
+                break;
+            case 38:
+            if(!maze.cells[r_step][c_step].top){
+                eater.move('up')
+                --r_step
+            }
+                
+                break;
+            case 39:
+            if(!maze.cells[r_step][c_step].right){
+                eater.move('right')
+                 ++c_step
+            }
+               
+                break;
+            case 40:
+            if(!maze.cells[r_step][c_step].bottom){
+                eater.move('down')
+                 ++r_step
+            }
+               
+                break;
+        }
+    }
+    </script>
+</body>
+
+</html>
