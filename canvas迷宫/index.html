@@ -135,7 +135,9 @@
             }
         }
         drawCells() {
-
+            if(width>=height){
+                width=height
+            }
             var x = 0,
                 y = 0,
                 w = (width - 30) / 10;
@@ -176,8 +178,6 @@
             }
         }
     }
-
-
     var maze = new Maze();
     maze.init();
     class Eater {
