@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style type="text/css">
+    * {
+        margin: 0px;
+        padding: 0px;
+    }
+    
+    body {
+        overflow: hidden;
+    }
+    
+    #canvas {
+        background: #000;
+    }
+    </style>
+</head>
+
+<body>
+    <canvas id="canvas"></canvas>
+    <script src="https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js">
+    </script>
+    <script type="text/javascript">
+    var ctx = document.getElementById('canvas').getContext('2d');
+    $(window).resize(function() {
+        resizeCanvas();
+    });
+    var width = $(window).get(0).innerWidth;
+    var height = $(window).get(0).innerHeight;
+    var points = []; //存储坐标
+    function resizeCanvas() {
+        $("#canvas").attr("width", width);
+        $("#canvas").attr("height", height);
+    }
+    resizeCanvas();
+    class Arc {
+        init(location, r, style) {
+            this.location = location;
+            this.r = r;
+            this.style = style;
+        }
+        draw() {
+            ctx.fillStyle = this.style;
+            ctx.arc(this.location.x, this.location.y, this.r, 0, 2 * Math.PI, false)
+            ctx.fill();
+        }
+    }
+
+    class Fire {
+        init(x, y, w, h,vy) {
+            this.x = x;
+            this.y = y;
+            this.w = w;
+            this.h = h;
+            this.vy=vy;
+        }
+        draw() {
+            var styles = ['rgba(234,101,50,1)', 'rgba(255,167,45,1)', 'rgba(234,101,50,0.6)', 'rgba(234,101,50,0.4)', 'rgba(234,101,50,0.2)', 'rgba(234,101,50,0)']
+          
+            var y = this.y - this.h + Math.random() * this.h
+            var x = this.x + Math.random() * this.w;
+            for (var i = 0; i < 6; i++) {
+            	y+=8
+                for (var j = 0; j < 4; j++) {
+                x+=8   
+                    var arc = new Arc();
+                    var style = styles[i]
+                    arc.init({
+                        x: x,
+                        y: y
+                    }, 10, style)
+                    arc.draw()
+                }
+            }
+        }
+        move(obj){
+        	window.requestAnimationFrame(obj.move);
+        	this.y+=this.vy;
+        	this.vy*=0.8;
+        	this.draw();
+        }
+    }
+    var fire=new Fire();
+    fire.init(width/2-30,height/2+30,40,60,10)
+    function move(){
+    	window.requestAnimationFrame(move);
+    	fire.y+=fire.vy;
+        fire.vy*=0.8;
+        fire.draw();
+    }
+    move();
+    </script>
+</body>
+
+</html>
