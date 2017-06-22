@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style type="text/css">
+    * {
+        margin: 0px;
+        padding: 0px;
+    }
+    
+    body {
+        overflow: hidden;
+    }
+    
+    #canvas {
+        background: #d0eae3;
+    }
+    </style>
+</head>
+
+<body>
+    <canvas id="canvas"></canvas>
+    <script src="https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js">
+    </script>
+    <script type="text/javascript">
+    var ctx = document.getElementById('canvas').getContext('2d');
+    $(window).resize(function() {
+        resizeCanvas();
+    });
+    var width = $(window).get(0).innerWidth;
+    var height = $(window).get(0).innerHeight;
+    var points = []; //存储坐标
+    function resizeCanvas() {
+        $("#canvas").attr("width", width);
+        $("#canvas").attr("height", height);
+    }
+    resizeCanvas();
+
+    function drawPath() {
+
+        ctx.beginPath();
+        ctx.moveTo(0, height);
+        ctx.lineTo(0, 2 * height / 3);
+        ctx.bezierCurveTo(1 * width / 4 - 50, 0, 3 * width / 4, height, width, 2 * height / 3 + 30);
+        ctx.lineTo(width, height)
+        ctx.closePath()
+        ctx.clip();
+        ctx.beginPath();
+        ctx.strokeStyle = "#008f9e"
+        ctx.lineWidth = '20'
+        ctx.moveTo(0, 2 * height / 3);
+        ctx.bezierCurveTo(1 * width / 4 - 50, 0, 3 * width / 4, height, width, 2 * height / 3 + 30);
+        ctx.stroke();
+        var x=0,y=0;
+        for(var i=0;i<width;i++){
+        	x=0;
+        	for(var j=0;j<height;j++){
+        		if(ctx.isPointInPath(x,y)){
+        			ctx.beginPath();
+        			ctx.strokeStyle="#fff";
+        			ctx.arc(x,y,5,0,2*Math.PI,false)
+        			ctx.stroke();
+        		}
+        		x+=10;
+        	}
+        	y+10;
+        }
+        var r_w = width / 25;
+        var x = 0,
+            y = 0;
+        for (var i = 0; i < 100; i++) {
+            x = 0;
+            for (var j = 0; j < 25; j++) {
+                ctx.beginPath();
+                ctx.lineWidth = '5'
+                ctx.strokeStyle = "#008f9e"
+                ctx.rect(x, y, r_w, r_w)
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.fillStyle = "#008f9e"
+                ctx.arc(x, y, 10, 0, 2 * Math.PI, false)
+                ctx.fill();
+                ctx.beginPath();
+                ctx.lineWidth = '2'
+                ctx.strokeStyle = "#008f9e"
+                ctx.moveTo(x, y);
+                ctx.lineTo(x + r_w, y + r_w)
+                ctx.moveTo(x + r_w, y);
+                ctx.lineTo(x, y + r_w);
+                ctx.stroke();
+                x += r_w
+            }
+            y += r_w;
+        }
+    }
+    drawPath();
+    </script>
+</body>
+
+</html>
