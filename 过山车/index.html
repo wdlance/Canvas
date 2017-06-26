@@ -37,36 +37,30 @@
         $("#canvas").attr("height", height);
     }
     resizeCanvas();
-
+    var points=[];
     function drawPath() {
-
         ctx.beginPath();
+       
         ctx.moveTo(0, height);
         ctx.lineTo(0, 2 * height / 3);
         ctx.bezierCurveTo(1 * width / 4 - 50, 0, 3 * width / 4, height, width, 2 * height / 3 + 30);
         ctx.lineTo(width, height)
         ctx.closePath()
+   
+        ctx.save();
         ctx.clip();
         ctx.beginPath();
         ctx.strokeStyle = "#008f9e"
         ctx.lineWidth = '20'
-        ctx.moveTo(0, 2 * height / 3);
-        ctx.bezierCurveTo(1 * width / 4 - 50, 0, 3 * width / 4, height, width, 2 * height / 3 + 30);
+        /*ctx.moveTo(0, 2 * height / 3);
+        ctx.lineTo(1 * width / 4 - 50, 0);
+        ctx.lineTo(3 * width / 4, height);
+        ctx.lineTo(width, 2 * height / 3 + 30);
         ctx.stroke();
-        var x=0,y=0;
-        for(var i=0;i<width;i++){
-        	x=0;
-        	for(var j=0;j<height;j++){
-        		if(ctx.isPointInPath(x,y)){
-        			ctx.beginPath();
-        			ctx.strokeStyle="#fff";
-        			ctx.arc(x,y,5,0,2*Math.PI,false)
-        			ctx.stroke();
-        		}
-        		x+=10;
-        	}
-        	y+10;
-        }
+        ctx.beginPath();*/
+        ctx.moveTo(0, 2 * height / 3);
+        ctx.bezierCurveTo(1 * width / 4, 0, 3 * width / 4, height, width, 2 * height / 3 + 30);
+        ctx.stroke();
         var r_w = width / 25;
         var x = 0,
             y = 0;
@@ -95,7 +89,66 @@
             y += r_w;
         }
     }
-    drawPath();
+    for(var i=0;i<points.length;i++){
+    	ctx.fillStyle="#f00";
+        	ctx.arc(points[i].x,points[i].y,15,0,2*Math.PI,false)
+        	ctx.fill()
+    }
+    function calcuPoint(p0, p1, p2, p3) {
+        var points = []
+        var t = 0
+        for (var i = 0; i < 100; i++) {
+            var x = p0.x * (1 - t) * (1 - t) * (1 - t) + 3 * p1.x * t * (1 - t) * (1 - t) + 3 * p2.x * t * t * (1 - t) + p3.x * t * t * t;
+            var y = p0.y * (1 - t) * (1 - t) * (1 - t) + 3 * p1.y * t * (1 - t) * (1 - t) + 3 * p2.y * t * t * (1 - t) + p3.y * t * t * t;
+            points.push({
+                x: x,
+                y: y
+            })
+            t += 0.05
+        }
+
+        return points
+    }
+    var p0 = {
+        x: 0,
+        y: 2 * height / 3
+    }
+    var p1 = {
+        x: 1 * width / 4 - 50,
+        y: 0
+    }
+    var p2 = {
+        x: 3 * width / 4,
+        y: height
+    }
+    var p3 = {
+        x: width,
+        y: 2 * height / 3 + 30
+    }
+    var points = calcuPoint(p0, p1, p2, p3)
+         
+         function drawArc(i){
+         	ctx.clearRect(0,0,width,height);
+         	window.requestAnimationFrame(drawArc)
+            drawPath();
+            ctx.restore();
+            ctx.beginPath();
+         	ctx.fillStyle="#f00";
+            ctx.arc(points[i].x,points[i].y-15,15,0,2*Math.PI,false)
+            ctx.fill()
+         	
+         }
+         setInterval(function(){
+           var i=0
+           drawArc(i)
+           if(i<points.length){
+             ++i;
+         }else{
+            i=0;
+         }
+          
+         },1000)
+        
     </script>
 </body>
 
