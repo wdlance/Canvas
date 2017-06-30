@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8">
+    <style type="text/css">
+    * {
+        margin: 0px;
+        padding: 0px;
+    }
+    
+    html,
+    body {
+        height: 100%;
+    }
+    
+    body {
+        overflow: hidden;
+        text-align: center;
+        padding: 15px;
+    }
+    
+    .operate {
+        border-bottom: 1px solid #dcdcdc;
+        padding: 15px 0px;
+    }
+    
+    .bottom {
+        height: 80%;
+        position: relative;
+    }
+    .getImage {
+        position: relative;
+    }
+    
+    input[type="file"] {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        left: 0px;
+        top: 0px;
+        opacity: 0;
+    }
+    </style>
+</head>
+
+<body>
+    <div class="operate">
+        <button class="getImage">
+            获取图片
+            <input type="file" name="">
+        </button>
+        <button class="upsetImage">打乱图片</button>
+        <button class="restoreImage">还原图片</button>
+    </div>
+    <div class="bottom">
+        <canvas id="canvas"></canvas>
+    </div>
+    <div style="clear: both;"></div>
+    <script src="https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js">
+    </script>
+    <script type="text/javascript">
+    var canvas = document.getElementById('canvas');
+    $(window).resize(function() {
+        resizeCanvas();
+    });
+    var points = []; //存储坐标
+    function resizeCanvas() {
+        $("#canvas").attr("width", 800);
+        $("#canvas").attr("height", 600);
+    }
+    resizeCanvas();
+    class jigsaw {
+        init(canvas, row, col) {
+            this.canvas = canvas;
+            this.ctx = canvas.getContext('2d');
+            this.row = row;
+            this.col = col;
+            this.pieces = [];
+            this.locations = [];
+            this.blocks = [];
+            this.lost = 0;
+            this.img = '';
+            this.getImage();
+        }
+        getImage() {
+            var self = this;
+            var ctx = this.ctx;
+            $('input[type="file"]').on('change', function(e) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    var img = new Image()
+                    img.onload = function() {
+                        self.img = img;
+                        self.getBlocks();
+                        self.bindEvent();
+                    }
+                    img.src = e.target.result
+                }
+                reader.readAsDataURL(e.target.files[0]);
+            })
+        }
+        getBlocks() {
+            var ctx = this.ctx;
+            var img = this.img;
+            var self = this;
+            var img_width = img.width;
+            var img_height = img.height;
+            var canvas_width = $('canvas').width();
+            var canvas_height = $('canvas').height();
+            var r_w = img_width / canvas_width;
+            var r_h = img_height / canvas_height;
+            var w = img_width / this.col;
+            var h = img_height / this.row;
+            var width = img.width;
+            var x = 0;
+            if (width < img_width) {
+                x = (img_width - width) / 2
+            }
+            ctx.clearRect(0, 0, $('canvas').width(), $('canvas').height())
+            this.pieces=[];
+            this.locations=[];
+            for (var i = 0; i < this.row; i++) {
+                for (var j = 0; j < this.col; j++) {
+                    var sx = j * w;
+                    var sy = i * h;
+                    ctx.drawImage(img, sx, sy, w, h, sx / r_w, sy / r_h, w / r_w, h / r_h)
+                    this.pieces.push({
+                        sx: sx,
+                        sy: sy,
+                        swidth: w,
+                        sheight: h
+
+                    });
+                    this.locations.push({
+                        x: sx / r_w,
+                        y: sy / r_h,
+                        width: w / r_w,
+                        height: h / r_h
+                    })
+
+                }
+            }
+        }
+        sortBlocks() {
+            var locations = this.locations;
+            var pieces = this.pieces;
+            var ctx = this.ctx;
+            var img = this.img;
+            var indexs = [];
+            for (var i = 0; i < pieces.length; i++) {
+                indexs.push(i)
+            }
+            function randomSort(a, b) {
+                return Math.random() > 0.5 ? -1 : 1;
+            }
+            var newArr=pieces.sort(randomSort)
+            ctx.clearRect(0, 0, $('canvas').width(), $('canvas').height())
+            this.blocks=[];
+            for (var i = 0; i < newArr.length; i++) {
+                var piece = newArr[i];
+                var location = locations[i];
+                this.blocks.push({
+                    sx: piece.sx,
+                    sy: piece.sy,
+                    swidth: piece.swidth,
+                    sheight: piece.sheight,
+                    x: location.x,
+                    y: location.y,
+                    width: location.width,
+                    height: location.height
+                } )
+                if (i != this.lost) {
+                    ctx.drawImage(img, piece.sx, piece.sy, piece.swidth, piece.sheight, location.x, location.y, location.width, location.height)
+                }
+            }
+        }
+        drawBlocks() {
+            var ctx = this.ctx;
+            var blocks = this.blocks;
+            var img = this.img;
+            ctx.clearRect(0, 0, $('canvas').width(), $('canvas').height())
+            for (var i = 0; i < blocks.length; i++) {
+                var block = blocks[i];
+                if (i != this.lost) {
+                    ctx.drawImage(img, block.sx, block.sy, block.swidth, block.sheight, block.x, block.y, block.width, block.height)
+                }
+            }
+        }
+        findMoveBlock(direction, x, y) {
+            var pieces = this.pieces;
+            var locations = this.locations;
+            var blocks = this.blocks;
+            var ctx = this.ctx;
+            var img = this.img;
+            for (var i = 0; i < blocks.length; i++) {
+                if (direction == 'left') {
+                    var left_x = blocks[i].x;
+                    var left_y = blocks[i].y;
+
+                    if (parseInt(x) == parseInt(left_x) && parseInt(y) == parseInt(left_y)) {
+                        blocks[this.lost].sx=blocks[i].sx;
+                        blocks[this.lost].sy=blocks[i].sy;
+                        this.lost = i;
+                        this.drawBlocks();
+                        break;
+                    }
+                } else if (direction == 'right') {
+                    var right_x = blocks[i].x + blocks[i].width;
+                    var right_y = blocks[i].y;
+                    if (parseInt(x) == parseInt(right_x) && parseInt(y) == parseInt(right_y)) {
+                        blocks[this.lost].sx=blocks[i].sx;
+                        blocks[this.lost].sy=blocks[i].sy;
+                        this.lost = i;
+                        this.drawBlocks();
+                        break;
+                    }
+                } else if (direction == 'up') {
+                    var bottom_x = blocks[i].x;
+                    var bottom_y = blocks[i].y;
+                    if (parseInt(x) == parseInt(bottom_x) && parseInt(y) == parseInt(bottom_y)) {
+                        blocks[this.lost].sx=blocks[i].sx;
+                        blocks[this.lost].sy=blocks[i].sy;
+                        this.lost = i;
+                        this.drawBlocks();
+                        break;
+                    }
+                } else if (direction == 'down') {
+                    var up_x = blocks[i].x;
+                    var up_y = blocks[i].y + blocks[i].height;
+                    if (parseInt(x) == parseInt(up_x) && parseInt(y) == parseInt(up_y)) {
+                        blocks[this.lost].sx=blocks[i].sx;
+                        blocks[this.lost].sy=blocks[i].sy;
+                        this.lost = i;
+                        this.drawBlocks();
+                        break;
+                    }
+                }
+
+            }
+        }
+        moveBlock(block) {
+            var ctx = this.ctx
+
+            function move() {
+                window.requestAnimationFrame(move)
+                ctx.clearRect(block.x, block.y, block.width, block.height)
+                block.x -= block.width;
+                ctx.drawImage(img, block.sx, block.sy, block.swidth, block.sheight, block.x, block.y, block.width, block.height)
+            }
+            move();
+        }
+        bindEvent() {
+            var self = this;
+            var ctx = this.ctx;
+            var img = this.img;
+            $('.upsetImage').on('click', function() {
+                self.sortBlocks()
+            })
+            $('.restoreImage').on('click', function() {
+                var canvas_width = $('canvas').width();
+                var canvas_height = $('canvas').height();
+                ctx.clearRect(0, 0, $('canvas').width(), $('canvas').height())
+                ctx.drawImage(img, 0, 0, canvas_width, canvas_height)
+            })
+            window.onkeydown = function(e) {
+                var lost = self.lost;
+                var blocks = self.blocks;
+                switch (e.keyCode) {
+                    case 37:
+                        var left_x = blocks[lost].x + blocks[lost].width;
+                        var left_y = blocks[lost].y;
+                        self.findMoveBlock('left', left_x, left_y);
+                        break;
+                    case 39:
+                        var left_x = blocks[lost].x;
+                        var left_y = blocks[lost].y;
+                        self.findMoveBlock('right', left_x, left_y);
+                        break;
+                    case 38:
+                        var left_x = blocks[lost].x;
+                        var left_y = blocks[lost].y + blocks[lost].height;
+                        self.findMoveBlock('up', left_x, left_y);
+                        break;
+                    case 40:
+                        var left_x = blocks[lost].x;
+                        var left_y = blocks[lost].y;
+                        self.findMoveBlock('down', left_x, left_y);
+                        break;
+                }
+            }
+        }
+    }
+    $(function() {
+        var pin_tu = new jigsaw();
+        var row = 3;
+        var col = 5;
+        pin_tu.init(canvas, row, col)
+    })
+    </script>
+</body>
+
+</html>
