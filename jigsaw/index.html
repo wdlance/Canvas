@@ -31,6 +31,12 @@
         height: 80%;
         position: relative;
     }
+    img{
+        width: 100%;
+    }
+    canvas{
+        background: #f3f3f3;
+    }
     .getImage {
         position: relative;
     }
@@ -54,9 +60,11 @@
         </button>
         <button class="upsetImage">打乱图片</button>
         <button class="restoreImage">还原图片</button>
+        <button class="difficult">增加难度</button>
+        <button class="easy">降低难度</button>
     </div>
     <div class="bottom">
-        <canvas id="canvas"></canvas>
+    <canvas id="canvas"></canvas>
     </div>
     <div style="clear: both;"></div>
     <script src="https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js">
@@ -68,8 +76,16 @@
     });
     var points = []; //存储坐标
     function resizeCanvas() {
-        $("#canvas").attr("width", 800);
-        $("#canvas").attr("height", 600);
+        var width = $(window).width();
+        var height = $(window).height();
+        if (width > 800) {
+            width = 800
+        }
+        if (height > 600) {
+            height = 600
+        }
+        $("#canvas").attr("width", width - 30);
+        $("#canvas").attr("height", height - 30);
     }
     resizeCanvas();
     class jigsaw {
@@ -89,6 +105,8 @@
             var self = this;
             var ctx = this.ctx;
             $('input[type="file"]').on('change', function(e) {
+                self.row = 4;
+                self.col = 4;
                 var reader = new FileReader();
                 reader.onload = function(e) {
                     var img = new Image()
@@ -108,6 +126,8 @@
             var self = this;
             var img_width = img.width;
             var img_height = img.height;
+            ctx.drawImage(img,0,0)
+            var wh=img_width/img_height;
             var canvas_width = $('canvas').width();
             var canvas_height = $('canvas').height();
             var r_w = img_width / canvas_width;
@@ -120,13 +140,13 @@
                 x = (img_width - width) / 2
             }
             ctx.clearRect(0, 0, $('canvas').width(), $('canvas').height())
-            this.pieces=[];
-            this.locations=[];
+            this.pieces = [];
+            this.locations = [];
             for (var i = 0; i < this.row; i++) {
                 for (var j = 0; j < this.col; j++) {
                     var sx = j * w;
                     var sy = i * h;
-                    ctx.drawImage(img, sx, sy, w, h, sx / r_w, sy / r_h, w / r_w, h / r_h)
+                    ctx.drawImage(img, sx, sy, w, h, sx / r_w, sy/r_h/wh, w / r_w, h/r_h/wh)
                     this.pieces.push({
                         sx: sx,
                         sy: sy,
@@ -136,9 +156,9 @@
                     });
                     this.locations.push({
                         x: sx / r_w,
-                        y: sy / r_h,
+                        y: sy/r_h/wh,
                         width: w / r_w,
-                        height: h / r_h
+                        height: h / r_h/wh
                     })
 
                 }
@@ -153,12 +173,13 @@
             for (var i = 0; i < pieces.length; i++) {
                 indexs.push(i)
             }
+
             function randomSort(a, b) {
                 return Math.random() > 0.5 ? -1 : 1;
             }
-            var newArr=pieces.sort(randomSort)
+            var newArr = pieces.sort(randomSort)
             ctx.clearRect(0, 0, $('canvas').width(), $('canvas').height())
-            this.blocks=[];
+            this.blocks = [];
             for (var i = 0; i < newArr.length; i++) {
                 var piece = newArr[i];
                 var location = locations[i];
@@ -171,7 +192,7 @@
                     y: location.y,
                     width: location.width,
                     height: location.height
-                } )
+                })
                 if (i != this.lost) {
                     ctx.drawImage(img, piece.sx, piece.sy, piece.swidth, piece.sheight, location.x, location.y, location.width, location.height)
                 }
@@ -190,8 +211,6 @@
             }
         }
         findMoveBlock(direction, x, y) {
-            var pieces = this.pieces;
-            var locations = this.locations;
             var blocks = this.blocks;
             var ctx = this.ctx;
             var img = this.img;
@@ -199,10 +218,9 @@
                 if (direction == 'left') {
                     var left_x = blocks[i].x;
                     var left_y = blocks[i].y;
-
                     if (parseInt(x) == parseInt(left_x) && parseInt(y) == parseInt(left_y)) {
-                        blocks[this.lost].sx=blocks[i].sx;
-                        blocks[this.lost].sy=blocks[i].sy;
+                        blocks[this.lost].sx = blocks[i].sx;
+                        blocks[this.lost].sy = blocks[i].sy;
                         this.lost = i;
                         this.drawBlocks();
                         break;
@@ -211,8 +229,8 @@
                     var right_x = blocks[i].x + blocks[i].width;
                     var right_y = blocks[i].y;
                     if (parseInt(x) == parseInt(right_x) && parseInt(y) == parseInt(right_y)) {
-                        blocks[this.lost].sx=blocks[i].sx;
-                        blocks[this.lost].sy=blocks[i].sy;
+                        blocks[this.lost].sx = blocks[i].sx;
+                        blocks[this.lost].sy = blocks[i].sy;
                         this.lost = i;
                         this.drawBlocks();
                         break;
@@ -221,8 +239,8 @@
                     var bottom_x = blocks[i].x;
                     var bottom_y = blocks[i].y;
                     if (parseInt(x) == parseInt(bottom_x) && parseInt(y) == parseInt(bottom_y)) {
-                        blocks[this.lost].sx=blocks[i].sx;
-                        blocks[this.lost].sy=blocks[i].sy;
+                        blocks[this.lost].sx = blocks[i].sx;
+                        blocks[this.lost].sy = blocks[i].sy;
                         this.lost = i;
                         this.drawBlocks();
                         break;
@@ -231,8 +249,8 @@
                     var up_x = blocks[i].x;
                     var up_y = blocks[i].y + blocks[i].height;
                     if (parseInt(x) == parseInt(up_x) && parseInt(y) == parseInt(up_y)) {
-                        blocks[this.lost].sx=blocks[i].sx;
-                        blocks[this.lost].sy=blocks[i].sy;
+                        blocks[this.lost].sx = blocks[i].sx;
+                        blocks[this.lost].sy = blocks[i].sy;
                         this.lost = i;
                         this.drawBlocks();
                         break;
@@ -241,21 +259,22 @@
 
             }
         }
-        moveBlock(block) {
-            var ctx = this.ctx
-
-            function move() {
-                window.requestAnimationFrame(move)
-                ctx.clearRect(block.x, block.y, block.width, block.height)
-                block.x -= block.width;
-                ctx.drawImage(img, block.sx, block.sy, block.swidth, block.sheight, block.x, block.y, block.width, block.height)
-            }
-            move();
-        }
         bindEvent() {
             var self = this;
             var ctx = this.ctx;
             var img = this.img;
+            $('.difficult').on('click', function() {
+                self.row += 1;
+                self.col += 1;
+                self.getBlocks();
+                self.sortBlocks();
+            })
+            $('.easy').on('click', function() {
+                self.row -= 1;
+                self.col -= 1;
+                self.getBlocks();
+                self.sortBlocks();
+            })
             $('.upsetImage').on('click', function() {
                 self.sortBlocks()
             })
@@ -291,12 +310,25 @@
                         break;
                 }
             }
+            $('canvas').onmousedown = function(e) {
+                var x = e.pageX;
+                var y = e.pageY;
+                var scrollX = $('body').scroll().left;
+                var scrollY = $('body').scroll().top;
+                var canvas_x = $('canvas').offset().left;
+                var canvas_y = $('canvas').offset().top;
+                var offset_x = x + scrollX - canvas_x;
+                var offset_y = y + scrollY - canvas_y;
+            }
+            $('canvas').onmouseup = function(e) {
+                console.log("sfsf")
+            }
         }
     }
     $(function() {
         var pin_tu = new jigsaw();
-        var row = 3;
-        var col = 5;
+        var row = 4;
+        var col = 4;
         pin_tu.init(canvas, row, col)
     })
     </script>
