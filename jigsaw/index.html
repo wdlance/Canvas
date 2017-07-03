@@ -94,6 +94,7 @@
             this.ctx = canvas.getContext('2d');
             this.row = row;
             this.col = col;
+            this.ratio=0;
             this.pieces = [];
             this.locations = [];
             this.blocks = [];
@@ -126,14 +127,16 @@
             var self = this;
             var img_width = img.width;
             var img_height = img.height;
-            ctx.drawImage(img,0,0)
             var wh=img_width/img_height;
+            this.ratio=wh;
             var canvas_width = $('canvas').width();
             var canvas_height = $('canvas').height();
+            ctx.drawImage(img,0,0,canvas_width,canvas_width/wh)
             var r_w = img_width / canvas_width;
             var r_h = img_height / canvas_height;
             var w = img_width / this.col;
             var h = img_height / this.row;
+            var p_y=canvas_height/(canvas_width/wh)
             var width = img.width;
             var x = 0;
             if (width < img_width) {
@@ -146,7 +149,7 @@
                 for (var j = 0; j < this.col; j++) {
                     var sx = j * w;
                     var sy = i * h;
-                    ctx.drawImage(img, sx, sy, w, h, sx / r_w, sy/r_h/wh, w / r_w, h/r_h/wh)
+                    ctx.drawImage(img, sx, sy, w, h, sx/r_w , sy/r_h/p_y, w/r_w, h/r_h/p_y)
                     this.pieces.push({
                         sx: sx,
                         sy: sy,
@@ -156,9 +159,9 @@
                     });
                     this.locations.push({
                         x: sx / r_w,
-                        y: sy/r_h/wh,
+                        y: sy/r_h/p_y,
                         width: w / r_w,
-                        height: h / r_h/wh
+                        height: h / r_h/p_y
                     })
 
                 }
@@ -282,7 +285,7 @@
                 var canvas_width = $('canvas').width();
                 var canvas_height = $('canvas').height();
                 ctx.clearRect(0, 0, $('canvas').width(), $('canvas').height())
-                ctx.drawImage(img, 0, 0, canvas_width, canvas_height)
+                ctx.drawImage(img, 0, 0, canvas_width, canvas_width/self.ratio)
             })
             window.onkeydown = function(e) {
                 var lost = self.lost;
